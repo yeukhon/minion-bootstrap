@@ -99,8 +99,11 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - minion-setup
 
   tasks:
-    - name: Run $MINION_DIR/setup.sh
-      command: $MINION_DIR/setup.sh
+    - name: Clone minion-backend and minion-frontend using setup.sh
+      command: $MINION_DIR/setup.sh clone
+
+    - name: Setup minion using setup.sh
+      command: $MINION_DIR/setup.sh setup
 
     - name: Ensure $MINION_DIR/minion-backed exists
       file: path=$MINION_BACKEND_DIR state=directory
