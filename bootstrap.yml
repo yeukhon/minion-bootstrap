@@ -188,6 +188,9 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Create /etc/supervisor/conf.d/ directory
       file: path=/etc/supervisor/conf.d state=directory
 
+    - name: Configure /etc/supervisor/supervisord.conf
+      template: src=templates/supervisord.conf.j2 dest=/etc/supervisor/supervisord.conf
+
     - name: Copy supervisord configuration files to /etc/supervisor/conf.d/
       command: cp ${item.src} ${item.dest}
       with_items:
