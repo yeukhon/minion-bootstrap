@@ -19,6 +19,9 @@
     - system
 
   tasks:
+    - name: Update apt-get
+      apt: update_cache=yes
+
     - name: Install essentials (see Minion README)
       apt: pkg=$item force=yes
       with_items:
@@ -30,8 +33,16 @@
         - rabbitmq-server
         - curl
         - libcurl4-openssl-dev
-        - postfix
-        
+        - stunnel4
+        - debconf-utils
+
+    - name: Pre-selectpostfix installation options
+      command: 'echo "postfix postfix/main_mailer_type select Internet Site" | sudo debconf-set-selections
+echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
+    
+    - name: Install postfix
+      apt: pkg=postfix
+                
     - name: Install basic development tools
       apt: pkg=$item force=yes
       with_items:
@@ -53,14 +64,11 @@
   tags:
      - required
      - minion
- 
+
   tasks:
      - name: Ensure /opt/minion exists
        file: path=$MINION_DIR state=directory owner=$USER group=$USER
-
-     - name: Ensure /opt/minion/plugins exists
-       file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
-
+ 
      - name: Ensure /var/log/supervisor exists
        file: path=$MINION_LOG_DIR state=directory owner=$USER group=$USER
 
@@ -114,8 +122,12 @@
     - zap
 
   tasks:
+    - name: Ensure /opt/minion/plugins exists
+      file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+
     - name: Install JAVA using openjdk
       apt: pkg=openjdk-7-jdk
+      sudo: True
 
     - name: Download known stable ZAP release
       get_url: url=$ZAP_URL dest=$MINION_PLUGINS_DIR/zap.tar
@@ -148,8 +160,12 @@
     - skipfish
 
   tasks:
+    - name: Ensure /opt/minion/plugins exists
+      file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+
     - name: Install skipfish via apt-get
       apt: name=skipfish force=yes
+      sudo: True
 
 # STEP 6: Kill and start all running WSGI apps and workers
 - hosts: vm
