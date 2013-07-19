@@ -171,6 +171,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
 
 # STEP 6: Kill and start all running WSGI apps and workers
 - hosts: vm
+  sudo: True
   gather_facts: no
   tags:
     - minion
@@ -180,22 +181,26 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
   tasks:
     - name: Install supervisor
       pip: name=supervisor state=present
-      sudo: True
+     
+    - name: Create /etc/supervisor directory
+      file: path=/etc/supervisor state=directory
+
+    - name: Create /etc/supervisor/conf.d/ directory
+      file: path=/etc/supervisor/conf.d state=directory
 
     - name: Copy supervisord configuration files to /etc/supervisor/conf.d/
-      command: mv ${itemm.src} ${item.dest}
+      command: cp ${item.src} ${item.dest}
       with_items:
         - {'src': $MINION_BACKEND_DIR/etc/minion-backend.supervisor.conf,
-           'dest': '/etc/supervisord/conf.d/minion-backend.supervisor.conf'}
+           'dest': '/etc/supervisor/conf.d/minion-backend.supervisor.conf'}
         - {'src': $MINION_BACKEND_DIR/etc/minion-plugin-worker.supervisor.conf,
-           'dest': '/etc/supervisord/conf.d/minion-plugin-worker.supervisor.conf'}
+           'dest': '/etc/supervisor/conf.d/minion-plugin-worker.supervisor.conf'}
         - {'src': $MINION_BACKEND_DIR/etc/minion-scan-worker.supervisor.conf,
-           'dest': '/etc/supervisord/conf.d/minion-scan-worker.supervisor.conf'}
+           'dest': '/etc/supervisor/conf.d/minion-scan-worker.supervisor.conf'}
         - {'src': $MINION_BACKEND_DIR/etc/minion-state-worker.supervisor.conf,
-           'dest': '/etc/supervisord/conf.d/minion-state-worker.supervisor.conf'}
+           'dest': '/etc/supervisor/conf.d/minion-state-worker.supervisor.conf'}
         - {'src': $MINION_FRONTEND_DIR/etc/minion-frontend.supervisor.conf,
-           'dest': '/etc/supervisord/conf.d/minion-frontend.supervisor.conf'}
-      sudo: True
+           'dest': '/etc/supervisor/conf.d/minion-frontend.supervisor.conf'}
       
     - name: Kill all processes managed by supervisor
       supervisorctl: name=$item state=stopped
