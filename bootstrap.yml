@@ -1,0 +1,215 @@
+---
+
+# This file contains all the Ansible magic needed
+# to turn a vanilla Ubuntu Precise VM to a Minion
+# development instance.
+
+# All constant variables are defined under group_vars/all.
+# You will recongize such vars by seeing CAPTIALIZATION.
+
+# STEP 1: Update and install libraries and packages
+# Users may install more up-to-date version of Mongodb
+# for example, if they find the apt-get version slow
+# or behind features.
+- hosts: vm
+  sudo: True
+  gather_facts: no
+  tags:
+    - required
+    - system
+
+  tasks:
+    - name: Install essentials (see Minion README)
+      apt: pkg=$item force=yes
+      with_items:
+        - git
+        - build-essential
+        - python-virtualenv
+        - python-dev
+        - mongodb-server
+        - rabbitmq-server
+        - curl
+        - libcurl4-openssl-dev
+        - postfix
+        
+    - name: Install basic development tools
+      apt: pkg=$item force=yes
+      with_item:
+        - vim
+        - tree
+        - unzip
+
+    - name: Install supervisor
+      pip: name=supervisor state=present
+
+
+# STEP 2: Create service directories
+# We place Minion under /opt but users may
+# place Minion under any directory they want
+# to. 
+- hosts: vm
+  sudo: True
+  gather_facts: no
+  tags:
+     - required
+     - minion
+ 
+  tasks:
+     - name: Ensure /opt/minion exists
+       file: path=$MINION_DIR state=directory owner=$USER group=$USER
+
+     - name: Ensure /opt/minion/plugins exists
+       file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+
+     - name: Ensure /var/log/supervisor exists
+       file: path=$MINION_LOG_DIR state=directory owner=$USER group=$USER
+
+# STEP 3: Clone Minion umbrella repository
+- hosts: vm
+  gather_facts: no
+  tags:
+    - required
+    - minion
+    - minion-repo
+    
+  tasks:
+    - name: git clone /mozilla/minion
+      git: repo=$MINION_REPO dest=$MINION_DIR
+      
+# STEP 4: Execute Minion umbrella's setup.sh
+# This file will clone two other repos:
+# minion-backend and minion-frontend, and
+# setup a common virtualenv called 'env'
+# within $MINION_DIR. 
+
+- hosts: vm
+  gather_facts: no
+  tags:
+    - required
+    - minion
+    - minion-repo
+    - minion-setup
+
+  tasks:
+    - name: Run $MINION_DIR/setup.sh
+      command: $MINION_DIR/setup.sh
+
+    - name: Ensure $MINION_DIR/minion-backed exists
+      file: path=$MINION_BACKEND_DIR state=directory
+
+    - name: Ensure $MINION_DIR/minion-frontend exists
+      file: path=$MINION_FRONTEND_DIR state=directory
+
+# STEP 5.1: Install ZAP (optional, default to yes)
+# This is optional if one runs with --tags "!zap"
+# Note you can run with multiple tags: --tags "tag1:tag2:!tag3:tag4..."
+# Read Ansible: http://www.ansibleworks.com/docs/playbooks2.html/#tags
+
+- hosts: vm
+  gather_facts: no
+  tags:
+    - minion
+    - minion-setup
+    - plugins
+    - zap
+
+  tasks:
+    - name: Install JAVA using openjdk
+      apt: pkg=openjdk-7-jdk
+
+    - name: Download known stable ZAP release
+      get_url: url=$ZAP_URL dest=$MINION_PLUGINS_DIR/zap.tar
+
+    # We could handle the case when extract exists and skip
+    # But if you bootstrap again and again, it's better to 
+    # default to override existing content.
+    - name: Extract zap.tar into zap 
+      command: tar xvf $MINION_PLUGINS_DIR/zap.tar
+
+    # This is difficult handle since user MIGHT have
+    # their own stuff in /etc/environment. But such
+    # file should always be centrally managed. In our
+    # case, we simply replace the conf file with our own
+    # by templating.
+    - name: Configure /etc/environment to include zap
+      template: src=templates/environment.js dest=/etc/environment
+      sudo: True    # this require sudo privilege, ansible shortcut :)
+    
+    
+# STEP 5.2: Install Skipfish (optional, default to yes)
+# See above, for how to run it as optional
+
+- hosts: vm
+  gather_facts: no
+  tags:
+    - minion
+    - minion-setup
+    - plugins
+    - skipfish
+
+  tasks:
+    - name: Install skipfish via apt-get
+      apt: name=skipfish force=yes
+
+# STEP 6: Kill and start all running WSGI apps and workers
+- hosts: vm
+  gather_facts: no
+  tags:
+    - minion
+    - minion-setup
+    - supervisord
+
+  tasks:
+    - name: Install supervisor
+      pip: name=supervisor state=present
+      sudo: True
+
+    - name: Copy supervisord configuration files to /etc/supervisor/conf.d/
+      command: mv ${itemm.src} ${item.dest}
+      with_items:
+        - {'src': $MINION_BACKEND_DIR/etc/minion-backend.supervisor.conf,
+           'dest': '/etc/supervisord/conf.d/minion-backend.supervisor.conf'}
+        - {'src': $MINION_BACKEND_DIR/etc/minion-plugin-worker.supervisor.conf,
+           'dest': '/etc/supervisord/conf.d/minion-plugin-worker.supervisor.conf'}
+        - {'src': $MINION_BACKEND_DIR/etc/minion-scan-worker.supervisor.conf,
+           'dest': '/etc/supervisord/conf.d/minion-scan-worker.supervisor.conf'}
+        - {'src': $MINION_BACKEND_DIR/etc/minion-state-worker.supervisor.conf,
+           'dest': '/etc/supervisord/conf.d/minion-state-worker.supervisor.conf'}
+        - {'src': $MINION_FRONTEND_DIR/etc/minion-frontend.supervisor.conf,
+           'dest': '/etc/supervisord/conf.d/minion-frontend.supervisor.conf'}
+      sudo: True
+      
+    - name: Kill all processes managed by supervisor
+      supervisorctl: name=$item state=stopped
+      with_item: 
+        - minion-backend
+        - minion-plugin-worker
+        - minion-scan-worker
+        - minion-state-worker
+        - minion-frontend-server
+      ignore_errors: yes    # super useful for first-time
+        
+    - name: Pause 10 seconds to let supervisor cool down.
+      pause: seconds=10
+      
+    - name: Start all processes managed by supervisor
+      supervisorctl: name=$item state=started
+      with_item:
+        - minion-backend
+        - minion-plugin-worker
+        - minion-scan-worker
+        - minion-state-worker
+        - minion-frontend-server
+
+# STEP 7: Add .bash_aliases
+# These aliases are meant for quick access
+
+- hosts: vm
+  gather_facts: no
+  tags:
+    - required
+    - minion-setup
+
+  tasks:
+    - name: Configure .bash_aliases
+      template: src=templates/bash_aliases.js dest=/home/$USER/.bash_aliases
