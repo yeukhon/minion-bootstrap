@@ -34,7 +34,7 @@
         
     - name: Install basic development tools
       apt: pkg=$item force=yes
-      with_item:
+      with_items:
         - vim
         - tree
         - unzip
@@ -181,7 +181,7 @@
       
     - name: Kill all processes managed by supervisor
       supervisorctl: name=$item state=stopped
-      with_item: 
+      with_items: 
         - minion-backend
         - minion-plugin-worker
         - minion-scan-worker
@@ -194,7 +194,7 @@
       
     - name: Start all processes managed by supervisor
       supervisorctl: name=$item state=started
-      with_item:
+      with_items:
         - minion-backend
         - minion-plugin-worker
         - minion-scan-worker
