@@ -225,15 +225,6 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Start supervisor
       command: sudo supervisord -c /etc/supervisor/supervisord.conf
          
-    - name: Ensure all processes managed by supervisor
-      supervisorctl: name=$item state=started
-      with_items:
-        - minion-backend
-        - minion-plugin-worker
-        - minion-scan-worker
-        - minion-state-worker
-        - minion-frontend-server
-
 # STEP 7: Add .bash_aliases
 # These aliases are meant for quick access
 
