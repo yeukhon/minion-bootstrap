@@ -102,9 +102,9 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Clone minion-backend and minion-frontend using setup.sh
       command: $MINION_DIR/./setup.sh clone $MINION_DIR
 
-    - name: Setup minion using setup.sh
-      command: $MINION_DIR/./setup.sh setup
-
+    - name: Install minion using setup.sh
+      command: $MINION_DIR/./setup.sh install $MINION_DIR
+      
     - name: Ensure $MINION_DIR/minion-backed exists
       file: path=$MINION_BACKEND_DIR state=directory
 
@@ -169,7 +169,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
       apt: name=skipfish force=yes
       sudo: True
 
-# STEP 6: Kill and start all running WSGI apps and workers
+# STEP 6: Setup supervisor
 - hosts: vm
   sudo: True
   gather_facts: no
@@ -205,6 +205,10 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
         - {'src': minion-frontend.supervisor.conf,
            'dest': '/etc/supervisor/conf.d/minion-frontend.supervisor.conf'}
       
+    - name: Stop supervisor
+      command: /usr/local/bin/supervisorctl shutdown
+      ignore_errors: yes
+
     - name: Kill all processes managed by supervisor
       supervisorctl: name=$item state=stopped
       with_items: 
@@ -217,8 +221,11 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
         
     - name: Pause 10 seconds to let supervisor cool down.
       pause: seconds=10
-      
-    - name: Start all processes managed by supervisor
+
+    - name: Start supervisor
+      command: sudo supervisord -c /etc/supervisor/supervisord.conf
+         
+    - name: Ensure all processes managed by supervisor
       supervisorctl: name=$item state=started
       with_items:
         - minion-backend
