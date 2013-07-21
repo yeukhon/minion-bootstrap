@@ -1,0 +1,2 @@
+[vm]
+ec2-184-169-248-167.us-west-1.compute.amazonaws.com ansible_ssh_user=ubuntu
