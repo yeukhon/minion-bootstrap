@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd {{ MINION_BACKEND_DIR }}
+source {{ MINION_BACKEND_ENV }}/bin/activate && {{ MINION_BACKEND_DIR }}/scripts/minion-state-worker
+
+trap "kill $!; exit" SIGHUP SIGINT SIGTERM SIGKILL
+
+while true; do
+    sleep 1
+done

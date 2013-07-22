@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd {{ MINION_FRONTEND_DIR }}
+source {{ MINION_FRONTEND_ENV }}/bin/activate && {{ MINION_FRONTEND_DIR }}/scripts/minion-frontend runserver -d -a 0.0.0.0
+
+trap "kill $!; exit" SIGHUP SIGINT SIGTERM SIGKILL
+
+while true; do
+    sleep 1
+done

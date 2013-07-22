@@ -53,7 +53,6 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Install supervisor
       pip: name=supervisor state=present
 
-
 # STEP 2: Create service directories
 # We place Minion under /opt but users may
 # place Minion under any directory they want
@@ -68,7 +67,10 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
   tasks:
      - name: Ensure /opt/minion exists
        file: path=$MINION_DIR state=directory owner=$USER group=$USER
- 
+
+     - name: Ensure /opt/minion/scripts exists
+       file: path=$MINION_SCRIPT_DIR state=directory owner=$USER group=$USER
+
      - name: Ensure /var/log/supervisor exists
        file: path=$MINION_LOG_DIR state=directory owner=$USER group=$USER
 
@@ -82,13 +84,17 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     
   tasks:
     - name: git clone /mozilla/minion
-      git: repo=$MINION_REPO dest=$MINION_DIR
+      git: repo=$MINION_REPO dest=$MINION_DIR update=yes force=yes
       
-# STEP 4: Execute Minion umbrella's setup.sh
-# This file will clone two other repos:
-# minion-backend and minion-frontend, and
-# setup a common virtualenv called 'env'
-# within $MINION_DIR. 
+# STEP 4: Install / develop minion
+# If 'develop' is passed as extra-args:
+#   create b and f virtualenv
+#   install backend and frontend using respective
+#   virtualenv.
+# If 'install' is passed as extra-args:
+#   execute minion/setup.sh which will install
+#   minion-backend and frontend using minion/env/
+#   virtualenv.
 
 - hosts: vm
   gather_facts: no
@@ -101,9 +107,40 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
   tasks:
     - name: Clone minion-backend and minion-frontend using setup.sh
       command: $MINION_DIR/./setup.sh clone $MINION_DIR
+      when: install is defined
 
     - name: Install minion using setup.sh
       command: $MINION_DIR/./setup.sh install $MINION_DIR
+      when: install is defined
+
+    - name: Clone minion-backend and minion-frontend (develop)
+      git: repo=${item.src} dest=${item.dest} update=yes
+      with_items:
+        - {'src': $MINION_BACKEND_REPO_URL, 
+           'dest': $MINION_BACKEND_DIR}
+        - {'src': $MINION_FRONTEND_REPO_URL,
+           'dest': $MINION_FRONTEND_DIR}
+      when: develop is defined
+
+    - name: Configure setup.sh
+      template: src=templates/setup.sh.j2 dest=$MINION_DIR/setup.sh
+      when: develop is defined
+
+    - name: chmod setup.sh
+      file: path=$MINION_DIR/setup.sh mode=0777
+      when: develop is defined     
+
+    - name: Create backend, frontend  env
+      command: virtualenv $item
+      with_items:
+        - $MINION_BACKEND_ENV
+        - $MINION_FRONTEND_ENV
+      when: develop is defined
+      ignore_errors: yes
+
+    - name: Develop minion-backend and frontend (develop)
+      command: $MINION_DIR/./setup.sh
+      when: develop is defined
       
     - name: Ensure $MINION_DIR/minion-backed exists
       file: path=$MINION_BACKEND_DIR state=directory
@@ -111,6 +148,23 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Ensure $MINION_DIR/minion-frontend exists
       file: path=$MINION_FRONTEND_DIR state=directory
 
+    - name: Configure startup scripts (develop)
+      template: src=templates/${item.src} dest=$MINION_SCRIPT_DIR/${item.dest}
+      with_items:
+        - {'src': 'start-backend.sh.j2', 
+           'dest': 'start-backend.sh'}
+        - {'src': 'start-plugin.sh.j2', 
+           'dest': 'start-plugin.sh'}
+        - {'src': 'start-scan.sh.j2', 
+           'dest': 'start-scan.sh'}
+        - {'src': 'start-state.sh.j2', 
+           'dest': 'start-state.sh'}
+        - {'src': 'start-frontend.sh.j2', 
+           'dest': 'start-frontend.sh'}
+
+    - name: Make all files under $MINION_SCRIPT_DIR executable (develop)
+      raw: 'cd $MINION_SCRIPT_DIR && chmod 777 *'
+            
 # STEP 5.1: Install ZAP (optional, default to yes)
 # This is optional if one runs with --tags "!zap"
 # Note you can run with multiple tags: --tags "tag1:tag2:!tag3:tag4..."
@@ -149,7 +203,20 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Configure /etc/environment to include zap
       template: src=templates/environment.j2 dest=/etc/environment
       sudo: True    # this require sudo privilege, ansible shortcut :)
-    
+   
+    # Install minion-zap-plugin
+    - name: Clone minion-zap-plugin
+      git: repo=$ZAP_REPO_URL dest=$MINION_PLUGINS_DIR/minion-zap-plugin update=yes
+
+    - name: Install minion-zap-plugin
+      command: sudo python $MINION_PLUGINS_DIR/minion-zap-plugin/setup.sh install
+      when: install is defined
+
+    - name: Develop minion-zap-plugin
+      raw: "cd $MINION_PLUGINS_DIR/minion-zap-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-zap-plugin/setup.py develop"
+      when: develop is defined
+
+
 # STEP 5.2: Install Skipfish (optional, default to yes)
 # See above, for how to run it as optional
 
@@ -177,6 +244,17 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
       command: sudo dpkg -i $MINION_PLUGINS_DIR/skipfish.deb
       ignore_errors: yes
       
+    - name: Clone minion-skipfish-plugin
+      git: repo=$SKIPFISH_REPO_URL dest=$MINION_PLUGINS_DIR/minion-skipfish-plugin update=yes
+
+    - name: Install minion-zap-plugin
+      command: sudo python $MINION_PLUGINS_DIR/minion-skipfish-plugin/setup.sh install
+      when: install is defined
+
+    - name: Develop minion-skipfish-plugin
+      raw: "cd $MINION_PLUGINS_DIR/minion-skipfish-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-skipfish-plugin/setup.py develop"
+      when: develop is defined
+
 # STEP 6: Setup supervisor
 - hosts: vm
   sudo: True
@@ -187,6 +265,9 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - supervisord
 
   tasks:
+    - name: Install gunicorn
+      pip: name=gunicorn state=present
+
     - name: Install supervisor
       pip: name=supervisor state=present
      
@@ -214,7 +295,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
            'dest': '/etc/supervisor/conf.d/minion-frontend.supervisor.conf'}
       
     - name: Stop supervisor
-      command: /usr/local/bin/supervisorctl shutdown
+      command: sudo /usr/local/bin/supervisorctl shutdown
       ignore_errors: yes
 
     - name: Kill all processes managed by supervisor

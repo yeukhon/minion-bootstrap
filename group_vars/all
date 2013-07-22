@@ -8,9 +8,18 @@ MINION_DIR: '/opt/minion'
 MINION_BACKEND_DIR: $MINION_DIR/minion-backend
 MINION_FRONTEND_DIR: $MINION_DIR/minion-frontend
 MINION_PLUGINS_DIR: $MINION_DIR/minion-plugins
+MINION_SCRIPT_DIR: $MINION_DIR/scripts
 MINION_LOG_DIR: '/var/log/supervisor'
+MINION_BACKEND_DIR: $MINION_DIR/minion-backend
+MINION_BACKEND_ENV: $MINION_DIR/b
+MINION_FRONTEND_ENV: $MINION_DIR/minion-backend
+MINION_FRONTEND_ENV: $MINION_DIR/f
 
 MINION_REPO: 'https://github.com/mozilla/minion.git'
-
+MINION_BACKEND_REPO_URL: 'https://github.com/mozilla/minion-backend'
+MINION_FRONTEND_REPO_URL: 'https://github.com/mozilla/minion-frontend'
 ZAP_URL: 'https://dl.dropboxusercontent.com/u/14655573/mozilla/zap-2013-07-16-yeukhon.tar'
 ZAP_DIR: $MINION_PLUGINS_DIR/zap
+ZAP_REPO_URL: 'https://github.com/mozilla/minion-zap-plugin'
+
+SKIPFISH_REPO_URL: 'https://github.com/mozilla/minion-skipfish-plugin'
