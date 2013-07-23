@@ -68,9 +68,6 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
      - name: Ensure $MINION_DIR exists
        file: path=$MINION_DIR state=directory owner=$USER group=$USER
 
-     - name: Ensure $MINION_SCRIPT_DIR  exists
-       file: path=$MINION_SCRIPT_DIR state=directory owner=$USER group=$USER
-
      - name: Ensure $MINION_LOG_DIR exists
        file: path=$MINION_LOG_DIR state=directory owner=$USER group=$USER
 
@@ -148,6 +145,9 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Ensure $MINION_DIR/minion-frontend exists
       file: path=$MINION_FRONTEND_DIR state=directory
 
+    - name: Ensure $MINION_SCRIPT_DIR exists
+      file: path=$MINION_SCRIPT_DIR state=directory owner=$USER group=$USER
+
     - name: Configure startup scripts (develop)
       template: src=templates/${item.src} dest=$MINION_SCRIPT_DIR/${item.dest}
       with_items:
@@ -193,7 +193,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     # But if you bootstrap again and again, it's better to 
     # default to override existing content.
     - name: Extract zap.tar into zap 
-      command: tar xvf $MINION_PLUGINS_DIR/zap.tar
+      command: tar -C $MINION_PLUGINS_DIR -xvf $MINION_PLUGINS_DIR/zap.tar
 
     # This is difficult handle since user MIGHT have
     # their own stuff in /etc/environment. But such
