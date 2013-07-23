@@ -65,13 +65,13 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
      - minion
 
   tasks:
-     - name: Ensure /opt/minion exists
+     - name: Ensure $MINION_DIR exists
        file: path=$MINION_DIR state=directory owner=$USER group=$USER
 
-     - name: Ensure /opt/minion/scripts exists
+     - name: Ensure $MINION_SCRIPT_DIR  exists
        file: path=$MINION_SCRIPT_DIR state=directory owner=$USER group=$USER
 
-     - name: Ensure /var/log/supervisor exists
+     - name: Ensure $MINION_LOG_DIR exists
        file: path=$MINION_LOG_DIR state=directory owner=$USER group=$USER
 
 # STEP 3: Clone Minion umbrella repository
@@ -229,7 +229,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - skipfish
 
   tasks:
-    - name: Ensure /opt/minion/plugins exists
+    - name: Ensure $MINION_PLUGINS_DIR exits
       file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
 
     - name: Download 32-bit
