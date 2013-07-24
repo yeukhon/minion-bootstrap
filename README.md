@@ -30,8 +30,6 @@ assumes:
 
 * this repository has been checkout to your
 current user's home directory, and
-* if we are using vagrant, we will store our
-vagrant files inside ``~/workstation``.
 
 
 Modes
@@ -60,23 +58,24 @@ as user, you need to provide ``GIT_USER`` to the inventory file, which we will d
 Launching with Vagrant
 ----------------------
 
-You can adopt the sample Vagrantfile directly
-from ``vagrant/32`` or ``vagrant/64``. 
-
-    $ cp -r vagrant/32 ~/workstation
-    
-Change ``32`` to ``64`` if you plan to create
-a 64-bit Ubuntu 12.04.2 LTS.
-
-If the assumption above do not hold (ie. you 
-are using a directory), change the
-ansible configuration in ``Vagrantfile``. You
-can always adjust the memory usage and number of 
-CPU core for the VM by editing the Vagrantfile.
-
-Next, create an inventory file:
+First, create an inventory file:
 
     $ cp inventory.example testing
+
+If you want to use your own fork instead
+of mozilla master repos, you should modify
+the inventory file ``testing``, and change
+``mozilla`` to your github's user name.
+
+You can adopt the sample Vagrantfile directly
+from ``32`` or ``64``. 
+
+    $ cd 32     if you want 32-bit
+    $ cd 64     if you want 64-bit
+
+You can always change configuration in this 
+Vagrantfile. For example, adjust the memory
+usage or CPU core number.
 
 If you want to use **install** instead
 of **develop** mode, open ``Vagrantfile``
@@ -84,18 +83,18 @@ using your favorite editor, and change
 ``ansible.extra_vars = {develop: true}`` to ``
 ``ansible.extra_vars = {install: true}``.
 
-If you want to use your own fork instead
-of mozilla master repos, you should modify
-the inventory file ``testing``, and change
-``mozilla`` to your github's user name.
-
 
 Finally, launch your new vagrant instance by
 
     $ vagrant up
 
 By default, the machine will be launch with 
-a local address ``192.168.33.50``.
+a local address ``192.168.33.50``. You can do
+
+    $ vagrant ssh
+    $ ssh vagrant@192.168.33.50
+
+The latter approach, the password is ``vagrant``.
 
 
 Launching with raw VM

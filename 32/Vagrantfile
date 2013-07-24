@@ -49,8 +49,8 @@ Vagrant.configure("2") do |config|
   # information on available options.
 
   config.vm.provision :ansible do |ansible|
-    ansible.playbook = "bootstrap.yml"
-    ansible.inventory_file = "testing"
+    ansible.playbook = "../bootstrap.yml"
+    ansible.inventory_file = "../testing"
     ansible.extra_vars = {develop: true}
   end
 
