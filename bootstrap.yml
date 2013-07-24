@@ -308,7 +308,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     #- name: Start supervisord
     #  command: sudo supervisord -c /etc/supervisor/supervisord.conf
 
-# STEP 7: Add .bash_aliases
+# STEP 7: Add .bash_aliases and vimrc
 # These aliases are meant for quick access
 
 - hosts: vm
@@ -321,3 +321,5 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - name: Configure .bash_aliases
       template: src=templates/bash_aliases.j2 dest=/home/$USER/.bash_aliases
 
+    - name: Configure vimrc
+      template: src=templates/vimrc dest=/home/$USER/.vimrc
