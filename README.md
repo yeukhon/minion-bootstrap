@@ -171,6 +171,8 @@ want to load in fixtures:
 It will prompt you to answer for a Persona email
 address and your name.
 
+You are done! Now open a browser and visit ``http://192.168.33.50:8080``.
+
 
 Aliases
 -------
