@@ -5,7 +5,7 @@ staging
 testing
 host
 develop
-
+.vagrant/
 *.py[cod]
 
 # C extensions

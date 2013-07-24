@@ -150,6 +150,45 @@ In summary, if using develop:
     $ ansible-playbook -i testing bootstrap.yml --private-key=/path/to/private-key/ --extra-vars='develop=True'     (key-atuh)
 
 
+Post-provisioning
+-----------------
+
+Due to a bug, we cannot automatically restart
+supervisord to allow our worker to
+pick up the PATH we set for ZAP.
+
+So do this:
+
+    $ vagrant ssh
+    $ startsuper
+    
+
+If this is a branch new machine, you probably
+want to load in fixtures:
+
+    $ benv && minion-db-init
+
+It will prompt you to answer for a Persona email
+address and your name.
+
+
+Aliases
+-------
+
+I love aliases. Here are the aliases I have 
+written into ``.bash_aliases``.
+
+* *minion*: cd into /opt/minion which holds
+    various repos and scripts.
+* *backend*: cd into minion-backend repo
+* *frontend*: cd into minion-frontend repo
+* *plugins*: cd into a directory currently holding
+    minion plugins.
+* *benv*: alias for sourcing into backend's virtualenv.
+* *fenv*: alias for sourcing into frontend's virtualenv.
+* *super*: alias for calling supervisorctl. You can restart minion-backend process by calling ``super restart minion-backend``, or ``super stop all`` to stop all running prcesses, just to name two.
+* *startsuper*: alias to start supervisord (in order to start the console you must have the daemon running first).
+
 
 
 
