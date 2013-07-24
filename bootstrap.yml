@@ -294,26 +294,20 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
         - {'src': minion-frontend.supervisor.conf,
            'dest': '/etc/supervisor/conf.d/minion-frontend.supervisor.conf'}
       
-    - name: Stop supervisor
-      command: sudo /usr/local/bin/supervisorctl shutdown
+    - name: Stop supervisor managed processes
+      command: sudo supervisorctl -c /etc/supervisor/supervisord.conf stop all
       ignore_errors: yes
 
-    - name: Kill all processes managed by supervisor
-      supervisorctl: name=$item state=stopped
-      with_items: 
-        - minion-backend
-        - minion-plugin-worker
-        - minion-scan-worker
-        - minion-state-worker
-        - minion-frontend-server
-      ignore_errors: yes    # super useful for first-time
+    - name: Shut down supervisord
+      command: sudo supervisorctl -c /etc/supervisor/supervisord.conf shutdown
+      ignore_errors: yes
         
     - name: Pause 10 seconds to let supervisor cool down.
       pause: seconds=10
 
-    - name: Start supervisor
-      command: sudo supervisord -c /etc/supervisor/supervisord.conf
-         
+    #- name: Start supervisord
+    #  command: sudo supervisord -c /etc/supervisor/supervisord.conf
+
 # STEP 7: Add .bash_aliases
 # These aliases are meant for quick access
 
@@ -326,3 +320,4 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
   tasks:
     - name: Configure .bash_aliases
       template: src=templates/bash_aliases.j2 dest=/home/$USER/.bash_aliases
+
