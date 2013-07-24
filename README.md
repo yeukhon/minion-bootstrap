@@ -178,16 +178,16 @@ Aliases
 I love aliases. Here are the aliases I have 
 written into ``.bash_aliases``.
 
-* *minion*: cd into /opt/minion which holds
+* **minion**: cd into /opt/minion which holds
     various repos and scripts.
-* *backend*: cd into minion-backend repo
-* *frontend*: cd into minion-frontend repo
-* *plugins*: cd into a directory currently holding
+* **backend**: cd into minion-backend repo
+* **frontend**: cd into minion-frontend repo
+* **plugins**: cd into a directory currently holding
     minion plugins.
-* *benv*: alias for sourcing into backend's virtualenv.
-* *fenv*: alias for sourcing into frontend's virtualenv.
-* *super*: alias for calling supervisorctl. You can restart minion-backend process by calling ``super restart minion-backend``, or ``super stop all`` to stop all running prcesses, just to name two.
-* *startsuper*: alias to start supervisord (in order to start the console you must have the daemon running first).
+* **benv**: alias for sourcing into backend's virtualenv.
+* **fenv**: alias for sourcing into frontend's virtualenv.
+* **super**: alias for calling supervisorctl. You can restart minion-backend process by calling ``super restart minion-backend``, or ``super stop all`` to stop all running prcesses, just to name two.
+* **startsuper**: alias to start supervisord (in order to start the console you must have the daemon running first).
 
 
 
