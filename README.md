@@ -116,7 +116,7 @@ Next, create an **inventory** file:
 
 We have chosen the name of the inventory file
 to be ``testing``. You are advised to choose
-staging, develop, testing, or production, 
+staging, development, testing, or production, 
 as a convention. 
 
 You need to give the IP address and the username.

@@ -1,0 +1,9 @@
+# You should cp this file. By convention, we
+# recommend user to call this file using one
+# of the following file names:
+# testing, production, staging, development
+
+[vm]
+192.168.33.50 ansible_ssh_user=vagrant GIT_USER=mozilla
+
+
