@@ -187,13 +187,16 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
       sudo: True
 
     - name: Download known stable ZAP release
-      get_url: url=$ZAP_URL dest=$MINION_PLUGINS_DIR/zap.tar
+      get_url: url=$ZAP_URL dest=$MINION_PLUGINS_DIR/zap.zip
 
     # We could handle the case when extract exists and skip
     # But if you bootstrap again and again, it's better to 
     # default to override existing content.
-    - name: Extract zap.tar into zap 
-      command: tar -C $MINION_PLUGINS_DIR -xvf $MINION_PLUGINS_DIR/zap.tar
+    - name: Extract zap.zip into zap 
+      command: unzip $MINION_PLUGINS_DIR/zap.zip -d $MINION_PLUGINS_DIR
+
+    - name: Rename folder to zap
+      command: mv $MINION_PLUGINS_DIR/$ZAP_RELEASE_DIR $ZAP_DIR
 
     # This is difficult handle since user MIGHT have
     # their own stuff in /etc/environment. But such

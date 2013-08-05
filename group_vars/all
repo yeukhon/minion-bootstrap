@@ -18,7 +18,8 @@ MINION_FRONTEND_ENV: $MINION_DIR/f
 MINION_REPO: 'https://github.com/mozilla/minion.git'
 MINION_BACKEND_REPO_URL: 'https://github.com/$GIT_USER/minion-backend'
 MINION_FRONTEND_REPO_URL: 'https://github.com/$GIT_USER/minion-frontend'
-ZAP_URL: 'https://dl.dropboxusercontent.com/u/14655573/mozilla/zap-2013-07-16-yeukhon.tar'
+ZAP_URL: "http://zaproxy.googlecode.com/files/ZAP_WEEKLY_D-2013-07-22.zip"
+ZAP_RELEASE_DIR: "ZAP_D-2013-07-22"
 ZAP_DIR: $MINION_PLUGINS_DIR/zap
 ZAP_REPO_URL: 'https://github.com/$GIT_USER/minion-zap-plugin'
 
