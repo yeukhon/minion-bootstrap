@@ -24,3 +24,5 @@ ZAP_DIR: $MINION_PLUGINS_DIR/zap
 ZAP_REPO_URL: 'https://github.com/$GIT_USER/minion-zap-plugin'
 
 SKIPFISH_REPO_URL: 'https://github.com/$GIT_USER/minion-skipfish-plugin'
+
+BREACH_REPO_URL: 'https://github.com/$GIT_USER/minion-breach-plugin'

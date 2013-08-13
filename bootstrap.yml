@@ -258,6 +258,31 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
       raw: "cd $MINION_PLUGINS_DIR/minion-skipfish-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-skipfish-plugin/setup.py develop"
       when: develop is defined
 
+# STEP 5.3: Install minion-breach-plugin (optional)
+
+- hosts: vm
+  gather_facts: no
+  tags:
+    - minion
+    - minion-setup
+    - plugins
+    - breach
+
+  tasks:
+    - name: Ensure $MINION_PLUGINS_DIR exists
+      file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+
+    - name: Clone minion-breach-plugin
+      git: repo=$BREACH_REPO_URL dest=$MINION_PLUGINS_DIR/minion-breach-plugin update=yes
+
+    - name: Install minion-breach-plugin
+      command: sudo python $MINION_PLUGINS_DIR/minion-breach-plugin/setup.py install
+      when: install is defined
+
+    - name: Develop minion-breach-plugin
+      raw: "cd $MINION_PLUGINS_DIR/minion-breach-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-breach-plugin/setup.py develop"
+      when: develop is defined
+
 # STEP 6: Setup supervisor
 - hosts: vm
   sudo: True
