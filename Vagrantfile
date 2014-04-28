@@ -50,7 +50,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "bootstrap.yml"
-    ansible.inventory_file = "testing"
+    ansible.inventory_path = "testing"
     ansible.extra_vars = {develop: true}
   end
 
