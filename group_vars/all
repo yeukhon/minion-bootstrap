@@ -5,24 +5,24 @@ USER: 'vagrant'
 #USER: 'ubuntu'
 
 MINION_DIR: '/opt/minion'
-MINION_BACKEND_DIR: $MINION_DIR/minion-backend
-MINION_FRONTEND_DIR: $MINION_DIR/minion-frontend
-MINION_PLUGINS_DIR: $MINION_DIR/minion-plugins
-MINION_SCRIPT_DIR: $MINION_DIR/scripts
+MINION_BACKEND_DIR:  '{{ MINION_DIR }}/minion-backend'
+MINION_FRONTEND_DIR:  '{{ MINION_DIR }}/minion-frontend'
+MINION_PLUGINS_DIR:  '{{ MINION_DIR }}/minion-plugins'
+MINION_SCRIPT_DIR:  '{{ MINION_DIR }}/scripts'
 MINION_LOG_DIR: '/var/log/supervisor'
-MINION_BACKEND_DIR: $MINION_DIR/minion-backend
-MINION_BACKEND_ENV: $MINION_DIR/b
-MINION_FRONTEND_ENV: $MINION_DIR/minion-backend
-MINION_FRONTEND_ENV: $MINION_DIR/f
+MINION_BACKEND_DIR:  '{{ MINION_DIR }}/minion-backend'
+MINION_BACKEND_ENV:  '{{ MINION_DIR }}/b'
+MINION_FRONTEND_ENV:  '{{ MINION_DIR }}/minion-backend'
+MINION_FRONTEND_ENV:  '{{ MINION_DIR }}/f'
 
 MINION_REPO: 'https://github.com/mozilla/minion.git'
-MINION_BACKEND_REPO_URL: 'https://github.com/$GIT_USER/minion-backend'
-MINION_FRONTEND_REPO_URL: 'https://github.com/$GIT_USER/minion-frontend'
-ZAP_URL: "http://zaproxy.googlecode.com/files/ZAP_WEEKLY_D-2013-07-22.zip"
-ZAP_RELEASE_DIR: "ZAP_D-2013-07-22"
-ZAP_DIR: $MINION_PLUGINS_DIR/zap
-ZAP_REPO_URL: 'https://github.com/$GIT_USER/minion-zap-plugin'
+MINION_BACKEND_REPO_URL: 'https://github.com/{{ GIT_USER }}/minion-backend'
+MINION_FRONTEND_REPO_URL: 'https://github.com/{{ GIT_USER }}/minion-frontend'
+ZAP_URL: "http://downloads.sourceforge.net/project/zaproxy/weekly/ZAP_WEEKLY_D-2015-01-19.zip"
+ZAP_RELEASE_DIR: "ZAP_D-2015-01-19"
+ZAP_DIR:  '{{ MINION_PLUGINS_DIR }}/zap'
+ZAP_REPO_URL: 'https://github.com/{{ GIT_USER }}/minion-zap-plugin'
 
-SKIPFISH_REPO_URL: 'https://github.com/$GIT_USER/minion-skipfish-plugin'
+SKIPFISH_REPO_URL: 'https://github.com/{{ GIT_USER }}/minion-skipfish-plugin'
 
-BREACH_REPO_URL: 'https://github.com/$GIT_USER/minion-breach-plugin'
+BREACH_REPO_URL: 'https://github.com/{{ GIT_USER }}/minion-breach-plugin'

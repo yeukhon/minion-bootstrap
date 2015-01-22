@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cd $MINION_BACKEND_DIR
-$MINION_BACKEND_ENV/bin/python $MINION_BACKEND_DIR/setup.py develop
+cd {{ MINION_BACKEND_DIR }}
+{{ MINION_BACKEND_ENV }}/bin/python {{ MINION_BACKEND_DIR }}/setup.py develop
 
-cd $MINION_FRONTEND_DIR
-$MINION_FRONTEND_ENV/bin/python $MINION_FRONTEND_DIR/setup.py develop
+cd {{ MINION_FRONTEND_DIR }}
+{{ MINION_FRONTEND_ENV }}/bin/python {{ MINION_FRONTEND_DIR }}/setup.py develop

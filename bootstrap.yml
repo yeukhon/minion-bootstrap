@@ -23,7 +23,7 @@
       apt: update_cache=yes
 
     - name: Install essentials (see Minion README)
-      apt: pkg=$item force=yes
+      apt: pkg={{ item }} force=yes
       with_items:
         - git
         - build-essential
@@ -44,7 +44,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
       apt: pkg=postfix
                 
     - name: Install basic development tools
-      apt: pkg=$item force=yes
+      apt: pkg={{ item }} force=yes
       with_items:
         - vim
         - tree
@@ -65,11 +65,11 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
      - minion
 
   tasks:
-     - name: Ensure $MINION_DIR exists
-       file: path=$MINION_DIR state=directory owner=$USER group=$USER
+     - name: Ensure {{ MINION_DIR }} exists
+       file: path={{ MINION_DIR }} state=directory owner={{ USER }} group={{ USER }}
 
-     - name: Ensure $MINION_LOG_DIR exists
-       file: path=$MINION_LOG_DIR state=directory owner=$USER group=$USER
+     - name: Ensure {{ MINION_LOG_DIR }} exists
+       file: path={{ MINION_LOG_DIR }} state=directory owner={{ USER }} group={{ USER }}
 
 # STEP 3: Clone Minion umbrella repository
 - hosts: vm
@@ -81,7 +81,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     
   tasks:
     - name: git clone /mozilla/minion
-      git: repo=$MINION_REPO dest=$MINION_DIR update=yes force=yes
+      git: repo={{ MINION_REPO }} dest={{ MINION_DIR }} update=yes force=yes
       
 # STEP 4: Install / develop minion
 # If 'develop' is passed as extra-args:
@@ -103,53 +103,53 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
 
   tasks:
     - name: Clone minion-backend and minion-frontend using setup.sh
-      command: $MINION_DIR/./setup.sh clone $MINION_DIR
+      command: "{{ MINION_DIR }}/./setup.sh clone {{ MINION_DIR }}"
       when: install is defined
 
     - name: Install minion using setup.sh
-      command: $MINION_DIR/./setup.sh install $MINION_DIR
+      command: "{{ MINION_DIR }}/./setup.sh install {{ MINION_DIR }}"
       when: install is defined
 
     - name: Clone minion-backend and minion-frontend (develop)
-      git: repo=${item.src} dest=${item.dest} update=yes
+      git: repo={{ item.src }} dest={{ item.dest }} update=yes
       with_items:
-        - {'src': $MINION_BACKEND_REPO_URL, 
-           'dest': $MINION_BACKEND_DIR}
-        - {'src': $MINION_FRONTEND_REPO_URL,
-           'dest': $MINION_FRONTEND_DIR}
+        - {'src': "{{ MINION_BACKEND_REPO_URL }}", 
+            'dest': "{{ MINION_BACKEND_DIR }}" }
+        - {'src': "{{ MINION_FRONTEND_REPO_URL }}",
+           'dest': "{{ MINION_FRONTEND_DIR }}"}
       when: develop is defined
 
     - name: Configure setup.sh
-      template: src=templates/setup.sh.j2 dest=$MINION_DIR/setup.sh
+      template: src=templates/setup.sh.j2 dest={{ MINION_DIR }}/setup.sh
       when: develop is defined
 
     - name: chmod setup.sh
-      file: path=$MINION_DIR/setup.sh mode=0777
+      file: path={{ MINION_DIR }}/setup.sh mode=0777
       when: develop is defined     
 
     - name: Create backend, frontend  env
-      command: virtualenv $item
+      command: virtualenv {{ item }}
       with_items:
-        - $MINION_BACKEND_ENV
-        - $MINION_FRONTEND_ENV
+        - "{{ MINION_BACKEND_ENV }}"
+        - "{{ MINION_FRONTEND_ENV }}"
       when: develop is defined
       ignore_errors: yes
 
     - name: Develop minion-backend and frontend (develop)
-      command: $MINION_DIR/./setup.sh
+      command: "{{ MINION_DIR }}/./setup.sh"
       when: develop is defined
       
-    - name: Ensure $MINION_DIR/minion-backed exists
-      file: path=$MINION_BACKEND_DIR state=directory
+    - name: Ensure {{ MINION_DIR }}/minion-backed exists
+      file: path={{ MINION_BACKEND_DIR }} state=directory
 
-    - name: Ensure $MINION_DIR/minion-frontend exists
-      file: path=$MINION_FRONTEND_DIR state=directory
+    - name: Ensure {{ MINION_DIR }}/minion-frontend exists
+      file: path={{ MINION_FRONTEND_DIR }} state=directory
 
-    - name: Ensure $MINION_SCRIPT_DIR exists
-      file: path=$MINION_SCRIPT_DIR state=directory owner=$USER group=$USER
+    - name: Ensure {{ MINION_SCRIPT_DIR }} exists
+      file: path={{ MINION_SCRIPT_DIR }} state=directory owner={{ USER }} group={{ USER }}
 
     - name: Configure startup scripts (develop)
-      template: src=templates/${item.src} dest=$MINION_SCRIPT_DIR/${item.dest}
+      template: src=templates/{{ item.src }} dest={{ MINION_SCRIPT_DIR }}/{{ item.dest }}
       with_items:
         - {'src': 'start-backend.sh.j2', 
            'dest': 'start-backend.sh'}
@@ -162,8 +162,8 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
         - {'src': 'start-frontend.sh.j2', 
            'dest': 'start-frontend.sh'}
 
-    - name: Make all files under $MINION_SCRIPT_DIR executable (develop)
-      raw: 'cd $MINION_SCRIPT_DIR && chmod 777 *'
+    - name: Make all files under {{ MINION_SCRIPT_DIR }} executable (develop)
+      raw: 'cd {{ MINION_SCRIPT_DIR }} && chmod 777 *'
             
 # STEP 5.1: Install ZAP (optional, default to yes)
 # This is optional if one runs with --tags "!zap"
@@ -180,23 +180,23 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
 
   tasks:
     - name: Ensure /opt/minion/plugins exists
-      file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+      file: path={{ MINION_PLUGINS_DIR }} state=directory owner={{ USER }} group={{ USER }}
 
     - name: Install JAVA using openjdk
       apt: pkg=openjdk-7-jdk
       sudo: True
 
     - name: Download known stable ZAP release
-      get_url: url=$ZAP_URL dest=$MINION_PLUGINS_DIR/zap.zip
+      get_url: url={{ ZAP_URL }} dest={{ MINION_PLUGINS_DIR }}/zap.zip
 
     # We could handle the case when extract exists and skip
     # But if you bootstrap again and again, it's better to 
     # default to override existing content.
     - name: Extract zap.zip into zap 
-      command: unzip $MINION_PLUGINS_DIR/zap.zip -d $MINION_PLUGINS_DIR
+      command: unzip {{ MINION_PLUGINS_DIR }}/zap.zip -d {{ MINION_PLUGINS_DIR }}
 
     - name: Rename folder to zap
-      command: mv $MINION_PLUGINS_DIR/$ZAP_RELEASE_DIR $ZAP_DIR
+      command: mv {{ MINION_PLUGINS_DIR }}/{{ ZAP_RELEASE_DIR }} {{ ZAP_DIR }}
 
     # This is difficult handle since user MIGHT have
     # their own stuff in /etc/environment. But such
@@ -209,14 +209,14 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
    
     # Install minion-zap-plugin
     - name: Clone minion-zap-plugin
-      git: repo=$ZAP_REPO_URL dest=$MINION_PLUGINS_DIR/minion-zap-plugin update=yes
+      git: repo={{ ZAP_REPO_URL }} dest={{ MINION_PLUGINS_DIR }}/minion-zap-plugin update=yes
 
     - name: Install minion-zap-plugin
-      command: sudo python $MINION_PLUGINS_DIR/minion-zap-plugin/setup.sh install
+      command: sudo python {{ MINION_PLUGINS_DIR }}/minion-zap-plugin/setup.sh install
       when: install is defined
 
     - name: Develop minion-zap-plugin
-      raw: "cd $MINION_PLUGINS_DIR/minion-zap-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-zap-plugin/setup.py develop"
+      raw: "cd {{ MINION_PLUGINS_DIR }}/minion-zap-plugin && {{ MINION_BACKEND_ENV }}/bin/python {{ MINION_PLUGINS_DIR }}/minion-zap-plugin/setup.py develop"
       when: develop is defined
 
 
@@ -232,30 +232,30 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - skipfish
 
   tasks:
-    - name: Ensure $MINION_PLUGINS_DIR exits
-      file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+    - name: Ensure {{ MINION_PLUGINS_DIR }} exits
+      file: path={{ MINION_PLUGINS_DIR }} state=directory owner={{ USER }} group={{ USER }}
 
     - name: Download 32-bit
-      get_url: url=http://launchpadlibrarian.net/126324292/skipfish_2.10b-1_i386.deb dest=$MINION_PLUGINS_DIR/skipfish.deb force=no
+      get_url: url=http://launchpadlibrarian.net/126324292/skipfish_2.10b-1_i386.deb dest={{ MINION_PLUGINS_DIR }}/skipfish.deb force=no
       when: ansible_architecture == 'i386'
 
     - name: Download 64-bit
-      get_url: url=http://launchpadlibrarian.net/126324272/skipfish_2.10b-1_amd64.deb dest=$MINION_PLUGINS_DIR/skipfish.deb force=no
+      get_url: url=http://launchpadlibrarian.net/126324272/skipfish_2.10b-1_amd64.deb dest={{ MINION_PLUGINS_DIR }}/skipfish.deb force=no
       when: ansible_architecture == 'x86_64'
 
     - name: Install skipfish via apt-get
-      command: sudo dpkg -i $MINION_PLUGINS_DIR/skipfish.deb
+      command: sudo dpkg -i {{ MINION_PLUGINS_DIR }}/skipfish.deb
       ignore_errors: yes
       
     - name: Clone minion-skipfish-plugin
-      git: repo=$SKIPFISH_REPO_URL dest=$MINION_PLUGINS_DIR/minion-skipfish-plugin update=yes
+      git: repo={{ SKIPFISH_REPO_URL }} dest={{ MINION_PLUGINS_DIR }}/minion-skipfish-plugin update=yes
 
     - name: Install minion-zap-plugin
-      command: sudo python $MINION_PLUGINS_DIR/minion-skipfish-plugin/setup.sh install
+      command: sudo python {{ MINION_PLUGINS_DIR }}/minion-skipfish-plugin/setup.sh install
       when: install is defined
 
     - name: Develop minion-skipfish-plugin
-      raw: "cd $MINION_PLUGINS_DIR/minion-skipfish-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-skipfish-plugin/setup.py develop"
+      raw: "cd {{ MINION_PLUGINS_DIR }}/minion-skipfish-plugin && {{ MINION_BACKEND_ENV }}/bin/python {{ MINION_PLUGINS_DIR }}/minion-skipfish-plugin/setup.py develop"
       when: develop is defined
 
 # STEP 5.3: Install minion-breach-plugin (optional)
@@ -269,18 +269,18 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
     - breach
 
   tasks:
-    - name: Ensure $MINION_PLUGINS_DIR exists
-      file: path=$MINION_PLUGINS_DIR state=directory owner=$USER group=$USER
+    - name: Ensure {{ MINION_PLUGINS_DIR }} exists
+      file: path={{ MINION_PLUGINS_DIR }} state=directory owner={{ USER }} group={{ USER }}
 
     - name: Clone minion-breach-plugin
-      git: repo=$BREACH_REPO_URL dest=$MINION_PLUGINS_DIR/minion-breach-plugin update=yes
+      git: repo={{ BREACH_REPO_URL }} dest={{ MINION_PLUGINS_DIR }}/minion-breach-plugin update=yes
 
     - name: Install minion-breach-plugin
-      command: sudo python $MINION_PLUGINS_DIR/minion-breach-plugin/setup.py install
+      command: sudo python {{ MINION_PLUGINS_DIR }}/minion-breach-plugin/setup.py install
       when: install is defined
 
     - name: Develop minion-breach-plugin
-      raw: "cd $MINION_PLUGINS_DIR/minion-breach-plugin && $MINION_BACKEND_ENV/bin/python $MINION_PLUGINS_DIR/minion-breach-plugin/setup.py develop"
+      raw: "cd {{ MINION_PLUGINS_DIR }}/minion-breach-plugin && {{ MINION_BACKEND_ENV }}/bin/python {{ MINION_PLUGINS_DIR }}/minion-breach-plugin/setup.py develop"
       when: develop is defined
 
 # STEP 6: Setup supervisor
@@ -309,7 +309,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
       template: src=templates/supervisord.conf.j2 dest=/etc/supervisor/supervisord.conf
 
     - name: Copy supervisord configuration files to /etc/supervisor/conf.d/
-      template: src=templates/${item.src} dest=${item.dest}
+      template: src=templates/{{ item.src }} dest={{ item.dest }}
       with_items:
         - {'src': minion-backend.supervisor.conf,
            'dest': '/etc/supervisor/conf.d/minion-backend.supervisor.conf'}
@@ -347,7 +347,7 @@ echo "postfix postfix/mailname string 127.0.0.1" | sudo debconf-set-selections'
 
   tasks:
     - name: Configure .bash_aliases
-      template: src=templates/bash_aliases.j2 dest=/home/$USER/.bash_aliases
+      template: src=templates/bash_aliases.j2 dest=/home/{{ USER }}/.bash_aliases
 
     - name: Configure vimrc
-      template: src=templates/vimrc dest=/home/$USER/.vimrc
+      template: src=templates/vimrc dest=/home/{{ USER }}/.vimrc
